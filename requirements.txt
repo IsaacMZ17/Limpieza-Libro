@@ -1,4 +1,7 @@
 spacy==3.8.0
 scikit-learn
+gensim
+matplotlib
+pandas
 # Nota: El modelo es_core_news_sm se descarga al ejecutar el script 
 # o mediante: python -m spacy download es_core_news_sm
