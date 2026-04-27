@@ -1,33 +1,33 @@
 import spacy
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
-# 1. CARGA DEL MODELO
-try:
-    nlp = spacy.load("es_core_news_sm")
-except OSError:
-    from spacy.cli import download
-    download("es_core_news_sm")
-    nlp = spacy.load("es_core_news_sm")
-
-# 2. INGESTA DE DATOS
+# 1. Cargar el modelo y el texto
+nlp = spacy.load("es_core_news_sm")
 with open("libro.txt", "r", encoding="utf-8") as f:
-    texto_libro = f.read()
+    texto = f.read()
 
-# 3. PROCESAMIENTO (Tokenización)
-doc = nlp(texto_libro)
+# 2. Preparar el Corpus Lematizado (por oraciones)
+doc = nlp(texto)
+corpus_lematizado = []
 
-# 4. NORMALIZACIÓN Y LEMATIZACIÓN
-tokens_normalizados = []
+for oracion in doc.sents:
+    lemas = [
+        token.lemma_.lower() 
+        for token in oracion 
+        if not token.is_stop and not token.is_punct and not token.is_space
+    ]
+    if lemas:
+        corpus_lematizado.append(" ".join(lemas))
 
-for token in doc:
-    # FILTRADO DE RUIDO: Eliminamos Stop Words y puntuación [cite: 317]
-    if not token.is_stop and not token.is_punct and token.text.strip():
-        # LEMATIZACIÓN: Reducimos a la forma base [cite: 356]
-        lema = token.lemma_.lower()
-        tokens_normalizados.append(lema)
+# 3. Implementar Bag of Words (BoW)
+# Cuenta la frecuencia ignorando el orden [cite: 211, 212]
+bow_vectorizer = CountVectorizer()
+X_bow = bow_vectorizer.fit_transform(corpus_lematizado)
 
-# 5. SALIDA DE DATOS
-with open("libro_limpio.txt", "w", encoding="utf-8") as f:
-    f.write(" ".join(tokens_normalizados))
+# 4. Implementar TF-IDF
+# Evalúa relevancia y reduce el peso de palabras muy comunes [cite: 243, 287]
+tfidf_vectorizer = TfidfVectorizer()
+X_tfidf = tfidf_vectorizer.fit_transform(corpus_lematizado)
 
-# LÍNEA CORREGIDA:
-print(f"Reducción de dimensionalidad: de {len(doc)} a {len(tokens_normalizados)} tokens.")
+print(f"Vocabulario total: {len(tfidf_vectorizer.get_feature_names_out())} palabras únicas.")
+print(f"Forma de la matriz TF-IDF: {X_tfidf.shape}")
